@@ -1,0 +1,24 @@
+{% extends 'registration/base.html' %}
+{% block title %}
+    صفحه ی خروج
+{% endblock %}
+{% block main %}
+    <div class="col-md-4 text-center mx-auto">
+        <div class="card card-gray">
+            <div class="card-header">
+                <h3 class="card-title mb-0 float-left">خروج</h3>
+            </div>
+            <div class="card-body py-4">
+                <form method="post">{% csrf_token %}
+                    <p class="py-2">
+                    <h2> با موفقیت خارج شدید ✅</h2>
+                    <div class="py-4 text-center mx-auto">
+                        <a href="{% url 'login' %}" type="submit" class="btn btn-dark">ورود به صفحه ی LOG
+                            IN</a>
+                    </div>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

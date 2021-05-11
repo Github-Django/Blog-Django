@@ -1,0 +1,67 @@
+{% extends 'one/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block main %}
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('{% static '/two/img/bg-signup.jpg' %}')">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-md-10 mx-auto">
+                    <div class="site-heading">
+                        <h1> خود آ </h1>
+                        <span class="subheading">علاقه مندی ها 🗿</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+                <h3 class="alert alert-dark">نویسنده : {{ author.get_full_name }}</h3>
+                {% for article in object_list %}
+                    <div class="post-preview">
+                        <a href="{% url 'post:detail' article.slug %}">
+                            <h2 class="post-title">
+                                {{ article.title }}
+                            </h2>
+                            <h3 class="post-subtitle">
+                                {{ article.description | striptags |safe| truncatewords:8 }}
+                            </h3>
+                        </a>
+                        <p class="post-meta">نوشته شده توسط :
+                            <a href="#">{{ article.author.get_full_name }}</a>
+                            {{ article.publish|naturaltime }}</p>
+                        <div>
+                            {% for cat in article.category.active %}
+                                <a href="{% url 'post:category' cat.slug %}">#{{ cat.title }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <hr>
+                {% endfor %}
+
+                <!-- Pager -->
+                {% if is_paginated %}
+                    <div class="clearfix pager-botton">
+                    {% if page_obj.has_previous %}
+                        <a class="btn btn-primary float-right ml-5"
+                           href="{% url "post:author" author.username page_obj.previous_page_number %}">پست های جدید
+                            &rarr;</a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a class="btn btn-primary float-right"
+                           href="{% url "post:author" author.username page_obj.next_page_number %}">پست های قدیمی
+                            &larr;</a>
+                    {% endif %}
+
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}

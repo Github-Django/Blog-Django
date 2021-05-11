@@ -1,0 +1,60 @@
+{% extends 'one/base.html' %}
+{% load base_tags %}
+{% load humanize %}
+{% load ratings %}
+{% block title %} | {{ object.title }}{% endblock %}
+
+{% block main %}
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url({{ object.thumbnail.url }})">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-md-10 mx-auto">
+
+                    <div class="site-heading" style="line-height:85px ">
+                        <h1 style="line-height: 85px">{{ object.title }}</h1>
+
+                        <h3>{{ object.publish|naturaltime }}</h3>
+
+                        {% if object.is_special %}
+                            <span class="badge badge-danger" style="border-radius: 10px">ویژه</span>
+                        {% endif %}
+                        <div><span class="badge badge-primary"
+                                   style="border-radius: 10px"> بازدیدها: {{ object.hits.count }}</span></div>
+                        <div>{% ratings object %}</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Post Content -->
+    <object>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-md-10 mx-auto text-justify">
+                    {% popular_articles %}
+
+                    {% if object.is_special %}
+                        {% if user.is_authenticated and user.is_special_user or user == object.author or user.is_superuser %}
+                            {{ object.description | safe }}
+                        {% else %}
+                            {{ object.description |striptags| truncatewords:10|safe }}
+
+                            <p class="alert alert-warning">این مقاله ویژه است و برای مشاهده ی آن باید <a href="#"
+                                                                                                         class="alert-link">
+                                اشتراک ویژه </a>تهیه کنید . </p>
+                        {% endif %}
+                    {% else %}
+                        {{ object.description | safe }}
+                    {% endif %}
+
+
+                </div>
+
+            </div>
+        </div>
+    </object>
+{% endblock %}

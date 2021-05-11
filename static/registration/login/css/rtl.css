@@ -1,0 +1,26 @@
+
+body {
+    text-align: right !important;
+    direction: rtl !important;
+    font-family: IRANSans-web !important;
+}
+
+.myfont {
+    font-family: IRANSans-web !important;
+}
+
+.login100-form-btn {
+    background: -moz-linear-gradient(left, #0003dc, #d41818, #fffb05);
+}
+
+.login100-form {
+    width: 100%;
+    border-radius: 10px;
+    background-color: #a3a3a3;
+}
+
+.errors {
+    color: red;
+    background-color: #f4a9a9;
+    padding: 20px 30px;
+}

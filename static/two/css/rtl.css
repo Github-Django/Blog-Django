@@ -1,0 +1,118 @@
+@font-face {
+    font-family: 'IRANSans-web';
+    src: url('IRANSans-Bold-web.eot');
+
+    src: url('IRANSans-Bold-web.eot?#iefix') format('eot'), /* IE6–8 */ url('IRANSans-Bold-web.woff2') format('woff2'), /* Chrome36+, Opera24+*/ url('IRANSans-Bold-web.woff') format('woff'), /* FF3.6+, IE9, Chrome6+, Saf5.1+*/ url('IRANSans-Bold-web.ttf') format('ttf');
+}
+
+body {
+    direction: rtl;
+    text-align: right;
+    font-family: IRANSans-web;
+    font-size: 15px;
+}
+
+.navbar-nav.ml-auto {
+    margin-left: initial !important;
+    margin-right: auto;
+    font-family: IRANSans-web;
+
+}
+
+.post-meta {
+    text-align: left;
+}
+
+.pager-botton {
+    float: left !important;
+}
+
+h1, h2, h3, h4, h5, h6, .subheading, .navbar-brand {
+    font-family: IRANSans-web;
+}
+
+header.masthead .page-heading h1, header.masthead .site-heading h1 {
+    font-size: 30px;
+}
+
+
+.nav ul {
+    padding-right: 0;
+}
+
+.nav ul li {
+    border-bottom: none;
+    height: 86px;
+    line-height: 86px;
+    font-size: 14px;
+    display: inline-block;
+    float: left;
+    margin: 0 auto;
+}
+
+.nav ul li a {
+    text-decoration: none;
+    color: #000000;
+    display: block;
+    transition: .3s background-color;
+    padding: 0 24px;
+}
+
+.nav ul li a:hover {
+    background-color: #4b4b4b;
+    color: #FFFFFF;
+}
+
+.nav a {
+    border-bottom: none;
+}
+
+.nav li ul {
+    position: absolute;
+    display: none;
+    width: inherit;
+}
+
+.nav li:hover ul {
+    display: block;
+}
+
+.nav ul li ul li {
+    display: block;
+    float: none !important; /* newly added */
+    height: auto; /* newly added */
+    line-height: 34px; /* newly added */
+}
+
+.nav ul li ul li ul {
+    position: absolute;
+    right: 100%;
+    top: 0;
+    display: none !important;
+}
+
+.nav ul > li > ul > li:hover > ul {
+    display: block !important;
+}
+
+.nav ul > li > ul > li > ul > li:hover > ul {
+    display: block !important;
+}
+
+.popular_articles {
+    border: 1px solid #bfbfbf;
+    padding: 15px;
+    border-radius: 5px;
+    width: 240px;
+    position: absolute;
+    left: -240px;
+    top: 0;
+    box-shadow: -5px 5px #d5d5d5;
+}
+
+
+
+
+
+
+

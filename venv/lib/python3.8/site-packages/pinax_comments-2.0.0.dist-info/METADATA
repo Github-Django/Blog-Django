@@ -1,0 +1,72 @@
+Metadata-Version: 2.1
+Name: pinax-comments
+Version: 2.0.0
+Summary: a comments app for Django
+Home-page: http://github.com/pinax/pinax-comments/
+Author: Pinax Team
+Author-email: team@pinaxproject.com
+License: MIT
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 2.2
+Classifier: Framework :: Django :: 3.0
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: django (>=2.2)
+Requires-Dist: django-appconf (>=1.0.1)
+
+
+.. image:: http://pinaxproject.com/pinax-design/patches/pinax-comments.svg
+    :target: https://pypi.python.org/pypi/pinax-comments/
+
+==============
+Pinax Comments
+==============
+
+.. image:: https://img.shields.io/pypi/v/pinax-comments.svg
+    :target: https://pypi.python.org/pypi/pinax-comments/
+
+\ 
+
+.. image:: https://img.shields.io/circleci/project/github/pinax/pinax-comments.svg
+    :target: https://circleci.com/gh/pinax/pinax-comments
+.. image:: https://img.shields.io/codecov/c/github/pinax/pinax-comments.svg
+    :target: https://codecov.io/gh/pinax/pinax-comments
+.. image:: https://img.shields.io/github/contributors/pinax/pinax-comments.svg
+    :target: https://github.com/pinax/pinax-comments/graphs/contributors
+.. image:: https://img.shields.io/github/issues-pr/pinax/pinax-comments.svg
+    :target: https://github.com/pinax/pinax-comments/pulls
+.. image:: https://img.shields.io/github/issues-pr-closed/pinax/pinax-comments.svg
+    :target: https://github.com/pinax/pinax-comments/pulls?q=is%3Apr+is%3Aclosed
+
+\ 
+
+.. image:: http://slack.pinaxproject.com/badge.svg
+    :target: http://slack.pinaxproject.com/
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+    :target: https://opensource.org/licenses/MIT/
+
+\ 
+
+``pinax-comments`` is a comments app for Django.
+
+Supported Django and Python Versions
+------------------------------------
+
++-----------------+-----+-----+-----+
+| Django / Python | 3.6 | 3.7 | 3.8 |
++=================+=====+=====+=====+
+|  2.2            |  *  |  *  |  *  |
++-----------------+-----+-----+-----+
+|  3.0            |  *  |  *  |  *  |
++-----------------+-----+-----+-----+
+
+

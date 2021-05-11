@@ -1,0 +1,114 @@
+Metadata-Version: 2.1
+Name: django-db-comments
+Version: 0.2.2
+Summary: Move your model's verbose name and help_text to database comments
+Home-page: https://github.com/vanadium23/django-db-comments
+Author: Ivan Chernov
+Author-email: chernoffivan@gmail.com
+License: MIT
+Keywords: django-db-comments
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: Django :: 1.11
+Classifier: Framework :: Django :: 2.0
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+
+=============================
+Django Db Comments
+=============================
+
+.. image:: https://badge.fury.io/py/django-db-comments.svg
+    :target: https://badge.fury.io/py/django-db-comments
+
+.. image:: https://travis-ci.org/vanadium23/django-db-comments.svg?branch=master
+    :target: https://travis-ci.org/vanadium23/django-db-comments
+
+.. image:: https://codecov.io/gh/vanadium23/django-db-comments/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/vanadium23/django-db-comments
+
+Move your model's verbose name and help_text to database comments:
+
+.. image:: setup-and-result.jpg
+    :alt: Add to INSTALLED_APPS and see description in database.
+
+Documentation
+-------------
+
+The full documentation is at https://django-db-comments.readthedocs.io.
+
+Quickstart
+----------
+
+Install Django Db Comments::
+
+    pip install django-db-comments
+
+Add it to your `INSTALLED_APPS`:
+
+.. code-block:: python
+
+    INSTALLED_APPS = (
+        ...
+        'django_db_comments',
+        ...
+    )
+
+Features
+--------
+
+* Copy verbose_name and help_text to columns in DB, currently: Postgres_.
+
+Running Tests
+-------------
+
+Does the code actually work?
+
+::
+
+    source <YOURVIRTUALENV>/bin/activate
+    (myenv) $ pip install tox
+    (myenv) $ tox
+
+Credits
+-------
+
+Tools used in rendering this package:
+
+*  Cookiecutter_
+*  `cookiecutter-djangopackage`_
+
+.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+.. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage
+.. _Postgres: https://www.postgresql.org/docs/9.1/sql-comment.html
+
+
+
+
+History
+-------
+
+0.2.2 (2019-05-19)
+++++++++++++++++++
+
+* Add psqlextra.backend to ALLOWED_ENGINES. (PR #4 by @shuribuzz)
+
+0.2.1 (2019-05-19)
+++++++++++++++++++
+
+* Fix case, when help_text or verbose_name use ugettext_lazy from django. (PR #1 by @ErhoSen)
+
+
+0.2.0 (2019-05-07)
+++++++++++++++++++
+
+* First release on PyPI.
+
+
