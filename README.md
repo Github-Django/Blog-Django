@@ -1,9 +1,15 @@
 # Blog-Django
 This project is a Django blog that also uses the rest-framework
 
-## drf وبلاگ جنگویی و  
-
 ![1](https://user-images.githubusercontent.com/93652376/174613499-948d74ad-6c0a-4d44-8a33-5f1a6a99becf.jpg)
+
+---
+# طریقه نصب 
+`pip install requirements.txt`
+
+`pip install requiremnts.txt`
+
+
 ###  امکانات : 
 #### 1.دارای دسته بندی(CATEGORY)تودرتو 
 
