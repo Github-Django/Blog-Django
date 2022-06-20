@@ -1,6 +1,7 @@
 # Blog-Django
 This project is a Django blog that also uses the rest-framework
-#وبلاگ جنگویی و drf
+
+## وبلاگ جنگویی و drf
 امکانات :
 1.دارای دسته بندی(CATEGORY)تودرتو 
 2.دارای پیجینیشن در همه ی بخش ها
