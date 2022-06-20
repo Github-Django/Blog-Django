@@ -2,7 +2,6 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from post.models import adminpost
 
-
 class FieldsMixin():
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_superuser:

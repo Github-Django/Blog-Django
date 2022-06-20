@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from account.views import LoginRedirect, Register, activate
 from post.views import logoutView
-
+# app_name = 'post'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('django.contrib.auth.urls')),
@@ -29,5 +29,6 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('logout/', logoutView, name='logout'),
     path('', include('social_django.urls', namespace='social')),
-
+    path('api/',include('api.urls')),
+    # path('api-auth',include('rest_framework.urls'))
 ]

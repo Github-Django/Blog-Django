@@ -3,7 +3,6 @@ from .models import adminpost, Category, IPAddress
 from account.models import User
 
 
-# Create your actions here.
 def make_published(modeladmin, request, queryset):
     rows_updated = queryset.update(status='p')
     if rows_updated == 1:
@@ -11,10 +10,6 @@ def make_published(modeladmin, request, queryset):
     else:
         message_bit = 'is published'
     modeladmin.message_user(request, "{} article {}".format(rows_updated, message_bit))
-
-
-make_published.short_description = "selected is published"
-
 
 def make_draft(modeladmin, request, queryset):
     rows_updated = queryset.update(status='d')
@@ -24,10 +19,6 @@ def make_draft(modeladmin, request, queryset):
         message_bit = 'is drafted'
     modeladmin.message_user(request, "{} article {}".format(rows_updated, message_bit))
 
-
-make_draft.short_description = "selected is drafted"
-
-
 def make_published_category(modelcategory, request, queryset):
     rows_updated = queryset.update(status=True)
     if rows_updated == 1:
@@ -36,10 +27,6 @@ def make_published_category(modelcategory, request, queryset):
         message_bit = 'is published'
     modelcategory.message_user(request, "{} category {}".format(rows_updated, message_bit))
 
-
-make_published.short_description = "selected is published"
-
-
 def make_draft_category(modelcategory, request, queryset):
     rows_updated = queryset.update(status=False)
     if rows_updated == 1:
@@ -47,8 +34,11 @@ def make_draft_category(modelcategory, request, queryset):
     else:
         message_bit = 'is drafted'
     modelcategory.message_user(request, "{} category {}".format(rows_updated, message_bit))
+    
 
-
+make_published.short_description = "selected is published"
+make_draft.short_description = "selected is drafted"
+make_published.short_description = "selected is published"
 make_draft.short_description = "selected is drafted"
 
 
@@ -58,9 +48,6 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('title', 'slug')
     prepopulated_fields = {'slug': ('title',)}  # title va slug ba ham set mishan
     actions = [make_published_category, make_draft_category]
-
-
-admin.site.register(Category, CategoryAdmin)
 
 
 class RadifAdmin(admin.ModelAdmin):
@@ -76,10 +63,7 @@ class RadifAdmin(admin.ModelAdmin):
     ordering = ('-publish', '-status')
     actions = [make_published, make_draft]
 
-    # def category_to_str(self, obj):
-    #     return ', '.join([category.title for category in obj.category.active()])
 
-
-# Register your models here.
+admin.site.register(Category, CategoryAdmin)
 admin.site.register(adminpost, RadifAdmin)
 admin.site.register(IPAddress)

@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     'django_gravatar',
     'star_ratings',
     'social_django',
+    'django_filters',
+    'rest_framework',
+    # 'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -146,10 +149,10 @@ AUTH_USER_MODEL = 'account.User'
 # django send email
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config("EMAIL_HOST")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
-EMAIL_HOST_USER = config("EMAIL_HOST_USER")
-EMAIL_PORT = config("EMAIL_PORT")
+EMAIL_PORT = 587
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'amoghadam.1378@gmail.com'
+EMAIL_HOST_PASSWORD = '10294690'
 
 # RATINGS
 STAR_RATINGS_STAR_WIDTH = 20
@@ -171,3 +174,35 @@ SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+        'DEFAULT_AUTHENTICATION_CLASSES': [
+    #         'rest_framework.authentication.BasicAuthentication',
+    #         'rest_framework.authentication.SessionAuthentication',
+    #         'rest_framework.authentication.TokenAuthentication',
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        # 'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',
+        'user': '1000/minute',
+        # 'articles':'2/min'
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5,
+
+
+}

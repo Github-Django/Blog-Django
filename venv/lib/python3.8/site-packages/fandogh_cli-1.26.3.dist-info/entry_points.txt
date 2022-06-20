@@ -1,0 +1,4 @@
+
+        [console_scripts]
+        fandogh=fandogh_cli.fandogh:base
+    

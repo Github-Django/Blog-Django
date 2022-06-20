@@ -1,8 +1,8 @@
 from django import forms
 from .models import User
+from django.contrib.auth.forms import UserCreationForm
 
 
-# profile
 class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
@@ -19,10 +19,6 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'special_user', 'is_author']
-
-
-# signup
-from django.contrib.auth.forms import UserCreationForm
 
 
 class SignupForm(UserCreationForm):

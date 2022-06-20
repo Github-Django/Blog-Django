@@ -16,9 +16,6 @@ class CtegoryManager(models.Manager):
     def active(self):
         return self.filter(status=True)
 
-
-# Create your models here.
-
 class Category(models.Model):
     parent = models.ForeignKey('self', default=None, null=True, blank=True, on_delete=models.SET_NULL,
                                related_name='children')
@@ -52,15 +49,13 @@ class adminpost(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     category = models.ManyToManyField(Category, related_name="articles")
     description = models.TextField(Category)
-    thumbnail = models.ImageField(upload_to='imagess')
+    thumbnail = models.ImageField(upload_to='imagess', default='#', blank=True, null=True)
     publish = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     is_special = models.BooleanField(default=False)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     hits = models.ManyToManyField(IPAddress, through='ArticleHit', blank=True, related_name='hits')
-
-    # commment = GenericRelation(Comment)
 
     def __str__(self):
         return self.title

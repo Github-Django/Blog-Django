@@ -4,14 +4,15 @@
 
 {% block main %}
     <!-- Page Header -->
-    <header class="masthead" style="background-image: url('{% static '/two/img/bg-signup.jpg' %}')">
+    <header class="masthead" style="background-image: url('{% static '/two/img/f.jpg' %}')">
         <div class="overlay"></div>
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-md-10 mx-auto">
                     <div class="site-heading">
-                        <h1> خود آ </h1>
-                        <span class="subheading">علاقه مندی ها 🗿</span>
+                        <h1> وبلاگ جنگویی </h1>
+                        <span class="badge badge-dark" style="border-radius: 12px; font-size: 13px;"></span>
+                        <div style="font-size: 90px;">☯</div>
                     </div>
                 </div>
             </div>
@@ -33,8 +34,7 @@
                             </h3>
                         </a>
                         <p class="post-meta">نوشته شده توسط :
-                            <a href="#">{{ article.author.get_full_name }}</a>
-                            {{ article.publish|naturaltime }}</p>
+                            <a href="#">{{ article.author.username }}</a>
                         <div>
                             {% for cat in article.category.active %}
                                 <a href="{% url 'post:category' cat.slug %}">#{{ cat.title }}</a>

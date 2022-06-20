@@ -1,0 +1,544 @@
+import json
+import os
+
+import click
+import requests
+from retrying import retry
+
+from fandogh_cli.config import get_cluster_config, get_user_config, get_user_token, get_cluster_namespace
+from fandogh_cli.utils import convert_datetime, parse_key_values, TextStyle, format_text
+
+cluster_url = [key['url'] for key in get_cluster_config() if key['active']][0] if get_cluster_config() else None
+fandogh_host = os.getenv('FANDOGH_HOST', cluster_url if cluster_url else 'fandogh.cloud')
+if fandogh_host.startswith("https://api."):
+    fandogh_host = fandogh_host.replace("https://api.", "")
+
+fandogh_ssh_host = os.getenv('FANDOGH_SSH_HOST', 'wss://ssh.{}'.format(fandogh_host))
+base_url = "https://api.{}/api/".format(fandogh_host)
+base_images_url = '%simages' % base_url
+base_services_url = '%sservices' % base_url
+base_managed_services_url = '%smanaged-services' % base_url
+base_volume_url = '%svolumes' % base_url
+base_schema_url = '%sschema' % base_url
+max_workspace_size = 20  # MB
+
+session = requests.Session()
+
+
+def get_session():
+    session.headers.update({
+        'Authorization': 'JWT ' + get_stored_token(),
+        'ACTIVE-NAMESPACE': get_cluster_namespace()
+    })
+    return session
+
+
+class TooLargeWorkspace(Exception):
+    pass
+
+
+class FandoghAPIError(Exception):
+    message = "Server Error"
+
+    def __init__(self, response):
+        self.response = response
+
+
+class AuthenticationError(Exception):
+    message = "Please login first. You can do it by running 'fandogh login' command"
+
+    def __init__(self, response=None):
+        self.response = response
+
+
+class ResourceNotFoundError(FandoghAPIError):
+    message = "Resource Not found"
+
+    def __init__(self, response, message=None):
+        self.response = response
+        if message:
+            self.message = message
+
+        if hasattr(self.response, 'json'):
+            self.message = self.response.json().get('message', self.message)
+
+
+class ExecutionForbidden(FandoghAPIError):
+    message = "Forbidden Execution"
+
+    def __init__(self, response, message=None):
+        self.response = response
+        if message:
+            self.message = message
+
+        if hasattr(self.response, 'json'):
+            self.message = self.response.json().get('message', self.message)
+
+
+class FandoghInternalError(FandoghAPIError):
+    message = "Sorry, there is an internal error, the incident has been logged and we will fix it ASAP"
+
+    def __init__(self, response):
+        self.response = response
+
+
+class FandoghBadRequest(FandoghAPIError):
+    def __init__(self, response):
+        self.response = response
+        try:
+            self.message = "Errors: \n{}".format(
+                "\n".join([" -> {}: {}".format(k, v) for k, v in response.json().items()]))
+        except AttributeError:
+            self.message = response.text
+
+
+class CommandParameterException(Exception):
+    def __init__(self, error_dict):
+        try:
+            self.message = "Errors: \n{}".format(
+                "\n".join([" -> {}: {}".format(k, v) for k, v in error_dict.items()]))
+        except AttributeError:
+            self.message = json.dumps(error_dict, indent=' ')
+
+
+def get_stored_token():
+    token_obj = get_user_token()
+    if token_obj is None:
+        raise AuthenticationError()
+    return token_obj
+
+
+def get_exception(response):
+    exception_class = {
+        404: ResourceNotFoundError,
+        401: AuthenticationError,
+        400: FandoghBadRequest,
+        429: FandoghBadRequest,
+        500: FandoghInternalError,
+        403: ExecutionForbidden,
+    }.get(response.status_code, FandoghAPIError)
+    return exception_class(response)
+
+
+def create_image(image_name):
+    response = get_session().post(base_images_url, json={'name': image_name})
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def delete_image(image_name):
+    response = get_session().delete(base_images_url + '/' + image_name)
+
+    if response.status_code != 200:
+        raise get_exception(response)
+
+    return response.json()
+
+
+def get_images():
+    response = get_session().get(base_images_url)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        result = response.json()
+        for item in result:
+            item['last_version_version'] = (item.get('last_version', {}) or {}).get('version', '--')
+            item['last_version_date'] = (item.get('last_version', {}) or {}).get('date', '--')
+        return result
+
+
+@retry(stop_max_attempt_number=5, wait_fixed=5000)
+def get_image_build(image_name, version, image_offset, with_timestamp):
+    response = get_session().get(
+        base_images_url + '/' + image_name + '/versions/' + version + '/builds', params={'image_offset': image_offset,
+                                                                                         'with_timestamp': with_timestamp},
+        timeout=3.5)
+
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+from requests_toolbelt.multipart import encoder
+
+
+def create_version(image_name, version, workspace_path, monitor_callback):
+    with open(workspace_path, 'rb') as file:
+        e = encoder.MultipartEncoder(
+            fields={'version': version,
+                    'source': ('workspace', file, 'text/plain')}
+        )
+        m = encoder.MultipartEncoderMonitor(e, monitor_callback)
+
+        response = get_session().post(base_images_url + '/' + image_name + '/versions', data=m,
+                                      headers={'Content-Type': m.content_type})
+
+        if response.status_code == 404:
+            raise ResourceNotFoundError(
+                response=response,
+                message="There is no image named {}, please check for typo".format(image_name)
+            )
+        if response.status_code != 200:
+            raise get_exception(response)
+        else:
+            return response.json()
+
+
+def list_versions(image_name):
+    response = get_session().get(base_images_url + '/' + image_name + '/versions')
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        result = response.json()
+        for item in result:
+            item['size'] = str(item.get('size') / 1000 / 1000) + 'MB'
+        return result
+
+
+def parse_port_mapping(port_mapping):
+    # validate and convert outside:inside:protocol to a nice dict
+    port_mapping = port_mapping.upper()
+    parts = port_mapping.split(":")
+    if len(parts) == 3:
+        outside, inside, protocol = parts
+        if protocol not in ('TCP', 'UDP'):
+            raise CommandParameterException(
+                {"internal_ports": [
+                    "%s is not a valid protocol in %s, protocol can ba tcp or udp" % (protocol, port_mapping)]})
+    elif len(parts) == 2:
+        protocol = "TCP"
+        outside, inside = parts
+    else:
+        raise CommandParameterException(
+            {"internal_ports": ["{} is not a valid port mapping, use this form outsidePort:insidePort:protocol, "
+                                "which protocol is optional and default protocol is tcp".format(port_mapping)]})
+    try:
+        return dict(outside=int(outside), inside=int(inside), protocol=protocol)
+    except ValueError:
+        raise CommandParameterException(
+            {"internal_ports": ["{} is not a valid port mapping, port numbers should be numbers".format(port_mapping)]})
+
+
+def deploy_service(image_name, version, service_name, envs, hosts, port, internal, registry_secret, image_pull_policy,
+                   internal_ports):
+    return deploy_manifest(
+        _generate_manifest(image_name, version, service_name, port, envs, hosts, internal, registry_secret,
+                           image_pull_policy, internal_ports))
+
+
+def list_services():
+    response = get_session().get(base_services_url)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        json_result = response.json()
+        for service in json_result:
+            if 'start_date' in service:
+                service['start_date'] = convert_datetime(service['start_date'])
+            if 'last_update' in service:
+                service['last_update'] = convert_datetime(service['last_update'])
+        return json_result
+
+
+def list_archived_services():
+    response = get_session().get(base_url + 'service-archives')
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def deploy_archived_service(service_name):
+    response = get_session().post(base_url + 'service-archives/{}'.format(service_name))
+    if response.status_code != 200:
+        if response.status_code == 400:
+            _check_for_manifest_errors(response)
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def delete_service_archive(archive_name):
+    response = get_session().delete(base_url + 'service-archives/{}'.format(archive_name))
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json().get('message', 'service archive deleted successfully')
+
+
+def destroy_service(service_name, with_archive):
+    params = {}
+    if with_archive:
+        params['with_archive'] = True
+    response = get_session().delete(base_services_url + '/' + service_name, params=params)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json().get('message', "`{}` service has been destroyed successfully".format(service_name))
+
+
+def get_token(username, password):
+    response = requests.post(base_url + 'tokens', json={'username': username, 'password': password})
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+@retry(stop_max_attempt_number=3, wait_fixed=4000)
+def get_logs(service_name, last_logged_time, max_logs, with_timestamp, previous):
+    response = get_session().get(base_services_url + '/' + service_name + '/logs',
+                                 params={'last_logged_time': last_logged_time,
+                                         'max_logs': max_logs,
+                                         'previous': previous,
+                                         'with_timestamp': with_timestamp},
+                                 timeout=2.5)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise get_exception(response)
+
+
+@retry(stop_max_attempt_number=5, wait_fixed=5000)
+def get_details(service_name):
+    response = get_session().get(base_services_url + '/' + service_name, timeout=3.5)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        service = response.json()
+        import json
+        if 'start_date' in service:
+            service['start_date'] = convert_datetime(service['start_date'])
+        if 'last_update' in service:
+            service['last_update'] = convert_datetime(service['last_update'])
+        return service
+
+
+def deploy_managed_service(service_name, version, configs):
+    configution = parse_key_values(configs)
+    response = get_session().post(base_managed_services_url,
+                                  json={'name': service_name,
+                                        'version': version,
+                                        'config': configution}
+                                  )
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def help_managed_service():
+    response = get_session().get(base_managed_services_url)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def deploy_manifest(manifest):
+    response = get_session().post(base_services_url + '/manifests',
+                                  json=manifest
+                                  )
+    if response.status_code != 200:
+        if response.status_code == 400:
+            _check_for_manifest_errors(response)
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def _generate_manifest(image, version, name, port, envs, hosts, internal, registry_secret, image_pull_policy,
+                       internal_ports):
+    manifest = dict()
+
+    if internal:
+        manifest['kind'] = 'InternalService'
+    else:
+        manifest['kind'] = 'ExternalService'
+
+    if name:
+        manifest['name'] = name
+
+    spec = dict()
+
+    if image:
+        spec['image'] = '{}:{}'.format(image, version)
+
+    env_list = []
+
+    if envs:
+        env_variables = parse_key_values(envs)
+        for key in env_variables:
+            env_list.append({'name': key, 'value': env_variables[key]})
+
+    spec['env'] = env_list
+
+    if registry_secret:
+        spec['image_pull_secret'] = registry_secret
+
+    if image_pull_policy:
+        spec['image_pull_policy'] = image_pull_policy
+
+    if hosts:
+        spec['domains'] = [{'name': host} for host in hosts]
+
+    if port:
+        spec['port'] = port
+    if internal_ports:
+        internal_ports = list(internal_ports)
+        spec['internal_port_mapping'] = [parse_port_mapping(port_mapping) for port_mapping in internal_ports]
+
+    manifest['spec'] = spec
+    return manifest
+
+
+def dump_manifest(service_name):
+    response = get_session().get(base_services_url + '/manifests',
+                                 params={'service_name': service_name}
+                                 )
+
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()['data']
+
+
+def request_service_history(service_name):
+    response = get_session().get(base_services_url + '/{}/history'.format(service_name))
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def remove_service_history(service_name, history_id):
+    response = get_session().delete(base_services_url + '/{}/history/{}'.format(service_name, history_id))
+
+    if response.status_code != 200:
+        return get_exception(response)
+    else:
+        return response.json().get('message', "`{}` service has been destroyed successfully".format(service_name))
+
+
+def request_service_rollback(service_name, history_id):
+    body = dict({'service_name': service_name, 'history_id': history_id})
+    response = get_session().post(base_services_url + '/rollbacks', json=body)
+
+    if response.status_code != 200:
+        return get_exception(response)
+    else:
+        return response.json()
+
+
+def request_service_action(service_name, service_action):
+    body = dict({'action': service_action})
+    response = get_session().post(base_services_url + '/{}/actions'.format(service_name), json=body)
+
+    if response.status_code != 200:
+        return get_exception(response)
+    else:
+        return response.json()
+
+
+'''
+Volume Requests Section
+
+method list:
+    create_volume_claim
+    delete_volume_claim
+    list_volumes
+'''
+
+''' 
+  Request to create a volume with:
+  
+  - volume_name: name of the dedicated volume user requires to build
+  - capacity: size of the volume ended with 'Gi'
+   
+'''
+
+
+def create_volume_claim(volume_name, capacity):
+    body = dict({'name': volume_name, 'capacity': capacity})
+    response = get_session().post(base_volume_url,
+                                  json=body
+                                  )
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+'''
+  Request ro delete a volume with:
+  
+  - volume_name: name of the volume to be deleted
+  
+'''
+
+
+def delete_volume_claim(volume_name):
+    response = get_session().delete(base_volume_url + '/{}'.format(volume_name))
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()['message']
+
+
+'''
+  Request ro expand a volume capacity with:
+  
+  - volume_name: name of the volume to expand
+  - new_capacity: new size for specified volume
+  
+'''
+
+
+def resize_volume_claim(volume_name, new_capacity):
+    data = {'capacity': new_capacity}
+    response = get_session().patch(base_volume_url + '/{}'.format(volume_name), data=data)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()['message']
+
+
+'''
+  Request to fetch list of volumes for a user:
+  
+'''
+
+
+def list_volumes():
+    response = get_session().get(base_volume_url)
+    if response.status_code != 200:
+        raise get_exception(response)
+    else:
+        return response.json()
+
+
+def get_manifest_document(doc_key):
+    token = get_stored_token()
+    response = requests.get(base_schema_url + '/' + doc_key,
+                            headers={'Authorization': 'JWT ' + token})
+    if response.status_code != 200:
+        return ''
+    else:
+        return response.json().get('document', '')
+
+
+def get_fandogh_latest_version():
+    response = requests.get(base_url + "/api/latest-version", timeout=5)
+    if response.status_code != 200:
+        return None
+    else:
+        return response.json().get('latest_version', None)
+
+
+def _check_for_manifest_errors(response):
+    document = get_manifest_document(list(response.json().keys())[0])
+    click.echo(format_text(document, TextStyle.WARNING))

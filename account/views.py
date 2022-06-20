@@ -6,9 +6,14 @@ from .forms import ProfileForm
 from .mixin import FieldsMixin, FormValidMixin, AuthorAccsesMixin, SuperUserAccsesMixin, AuthorsAccessMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from post.models import adminpost
-
-
-# Create your views here.
+from django.http import HttpResponse
+from .forms import SignupForm
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from .tokens import account_activation_token
+from django.core.mail import EmailMessage
 
 
 class ArticleList(AuthorsAccessMixin, ListView):
@@ -63,17 +68,6 @@ class LoginRedirect(LoginView):
             return reverse_lazy('account:profile')
 
 
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from .forms import SignupForm
-from django.contrib.sites.shortcuts import get_current_site
-from django.utils.encoding import force_bytes, force_text
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string
-from .tokens import account_activation_token
-from django.core.mail import EmailMessage
-
-
 class Register(CreateView):
     form_class = SignupForm
     template_name = 'registration/register.html'
@@ -99,31 +93,6 @@ class Register(CreateView):
 
         return HttpResponse('<a href="/login">ورود</a> لینک فعالسازی به ایمیل شما فرستاده شد  ')
 
-    # def signup(request):
-    #     if request.method == 'POST':
-    #         form = SignupForm(request.POST)
-    #         if form.is_valid():
-    #             user = form.save(commit=False)
-    #             user.is_active = False
-    #             user.save()
-    #             current_site = get_current_site(request)
-    #             mail_subject = 'Activate your blog account.'
-    #             message = render_to_string('acc_active_email.html', {
-    #                 'user': user,
-    #                 'domain': current_site.domain,
-    #                 'uid':urlsafe_base64_encode(force_bytes(user.pk)),
-    #                 'token':account_activation_token.make_token(user),
-    #             })
-    #             to_email = form.cleaned_data.get('email')
-    #             email = EmailMessage(
-    #                         mail_subject, message, to=[to_email]
-    #             )
-    #             email.send()
-    #             return HttpResponse('Please confirm your email address to complete the registration')
-    #     else:
-    #         form = SignupForm()
-    #     return render(request, 'signup.html', {'form': form})
-
 
 def activate(request, uidb64, token):
     try:
@@ -138,5 +107,3 @@ def activate(request, uidb64, token):
         return HttpResponse(' اکانت با موفقیت فعال شد برای ورود کلیک کنید <a href="/login">ورود</a>')
     else:
         return HttpResponse('لینک منقضی شده است! برای تلاش دوباره کلیک کنید <a href="/register">ورود</a>')
-
-

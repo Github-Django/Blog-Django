@@ -2,11 +2,10 @@
 {% load gravatar %}
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="index3.html" class="brand-link">
-        <img src="{% static 'registration/adminlte/dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo"
-             class="brand-image img-circle elevation-3"
-             style="opacity: .8">
-        <span class="brand-text font-weight-light"> پنل مدیریت سایت خودآ</span>
+    <a href="#" class="brand-link">
+
+        <span class="brand-text font-weight-light"
+              style="font-size: medium;color: #00efb2"> پنل مدیریت وبسایت جنگویی</span>
     </a>
 
     <!-- Sidebar -->
@@ -14,11 +13,10 @@
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{% gravatar_url user.email 150 %}"
-                     class="img-circle elevation-2" alt="{{ user.email }}>
+                <img src="{% gravatar_url user.email 150 %}" class="img-circle elevation-2" alt="{{ user.email }}">
             </div>
-            <div class= " info" >
-                <a href="#" class="d-block">{{ user.get_full_name }}</a>
+            <div class="info">
+                <a href="{% url 'account:profile' %}" class="d-block">{{ user.username }}</a>
             </div>
         </div>
 
@@ -63,7 +61,7 @@
                         <i class="nav-icon fas fa-th"></i>
                         <p>
                             پروفایل
-                            {#                            <span class="right badge badge-danger">جدید</span>#}
+{#                                                        <span class="right badge badge-danger">جدید</span>#}
                         </p>
                     </a>
             </ul>
